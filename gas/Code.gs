@@ -125,6 +125,65 @@ function response(msg) {
 }
 
 // -----------------------------------------------------------
+// ダッシュボード用データ取得 API（doGet）
+// 呼び出し例: GAS_URL?date=2026/03/26
+// -----------------------------------------------------------
+function doGet(e) {
+  try {
+    const date = (e && e.parameter && e.parameter.date)
+      ? e.parameter.date.replace(/-/g, '/')  // 2026-03-26 → 2026/03/26
+      : getTodayStr();
+
+    const ss       = SpreadsheetApp.openById(SS_ID);
+    const logs     = getSheetDataByDate(ss, 'logs',     'records_date', date);
+    const checkins = getSheetDataByDate(ss, 'checkins', 'checkin_date', date);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ date, logs, checkins }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// 今日の日付文字列を返す（Asia/Tokyo）
+function getTodayStr() {
+  return Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd');
+}
+
+// シートから指定日付のデータを取得してオブジェクト配列で返す
+function getSheetDataByDate(ss, sheetName, _unused, date) {
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return [];
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+
+  const headers = data[0].map(String);
+  const results = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const row     = data[i];
+    const rowDate = String(row[0]).substring(0, 10); // yyyy/MM/dd
+    if (rowDate === date) {
+      const obj = {};
+      headers.forEach((h, j) => { obj[h] = row[j]; });
+      results.push(obj);
+    }
+  }
+  return results;
+}
+
+// テスト用
+function testGet() {
+  const result = doGet({ parameter: { date: getTodayStr() } });
+  console.log(result.getContent());
+}
+
+// -----------------------------------------------------------
 // テスト用（Apps Script エディタから手動実行して確認）
 // -----------------------------------------------------------
 function testLog() {
