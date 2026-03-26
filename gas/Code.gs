@@ -181,11 +181,25 @@ function getSheetDataByDate(ss, sheetName, date) {
   const results = [];
 
   for (let i = 1; i < data.length; i++) {
-    const row     = data[i];
-    const rowDate = String(row[0]).substring(0, 10); // yyyy/MM/dd
+    const cellVal = data[i][0];
+
+    // スプレッドシートがDate型で保持している場合と文字列の場合を両方対応
+    let rowDate;
+    if (cellVal instanceof Date) {
+      rowDate = Utilities.formatDate(cellVal, 'Asia/Tokyo', 'yyyy/MM/dd');
+    } else {
+      rowDate = String(cellVal).substring(0, 10);
+    }
+
     if (rowDate === date) {
       const obj = {};
-      headers.forEach((h, j) => { obj[h] = row[j]; });
+      headers.forEach((h, j) => {
+        const v = data[i][j];
+        // Date型の値はすべて文字列に変換してJSONに含める
+        obj[h] = (v instanceof Date)
+          ? Utilities.formatDate(v, 'Asia/Tokyo', 'yyyy/MM/dd HH:mm:ss')
+          : v;
+      });
       results.push(obj);
     }
   }
