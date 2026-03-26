@@ -19,6 +19,10 @@
         /* ラジオボタンをボタン風にするスタイル */
         .mode-label { cursor: pointer; }
         .mode-label input:checked + div { background-color: #2563eb; color: white; border-color: #2563eb; }
+        /* チェックインボタン */
+        .checkin-btn { -webkit-tap-highlight-color: transparent; transition: transform 0.1s; }
+        .checkin-btn:active { transform: scale(0.95); }
+        .checkin-done { opacity: 0.5; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans pb-20">
@@ -74,6 +78,26 @@
             <p id="statusMsg" class="text-sm text-center text-blue-600 font-bold mt-2 h-4"></p>
         </div>
 
+        <!-- チェックインエリア -->
+        <div class="p-4 bg-indigo-50 border-t border-indigo-100">
+            <p class="text-xs font-bold text-indigo-700 mb-2 flex items-center gap-1">
+                <span>📋</span> 本日のチェックイン
+                <span id="cloudBadge" class="ml-auto text-xs text-gray-400">☁️ クラウド未設定</span>
+            </p>
+            <div class="flex gap-2">
+                <button id="checkinMorning" class="checkin-btn flex-1 py-3 bg-orange-400 hover:bg-orange-500 text-white rounded-xl text-sm font-bold shadow">
+                    🌅 朝
+                </button>
+                <button id="checkinNoon" class="checkin-btn flex-1 py-3 bg-yellow-400 hover:bg-yellow-500 text-white rounded-xl text-sm font-bold shadow">
+                    ☀️ 昼
+                </button>
+                <button id="checkinEvening" class="checkin-btn flex-1 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-bold shadow">
+                    🌙 夜
+                </button>
+            </div>
+            <p id="checkinStatus" class="text-xs text-center text-indigo-600 font-bold mt-2 h-4"></p>
+        </div>
+
         <!-- 本日のサマリー -->
         <div class="bg-blue-50 p-4 mx-4 rounded-lg border border-blue-100 flex justify-between items-center mb-4">
             <span class="font-semibold text-blue-800">本日の移動距離</span>
@@ -94,10 +118,64 @@
     <script>
         // --- 設定と初期変数 ---
         const STORAGE_KEY = 'mileage_records_v2'; // データ構造を変えたためキーを変更
-        const USER_KEY = 'mileage_username';
+        const USER_KEY    = 'mileage_username';
+        // GAS URL（デプロイ後にここを書き換える）
+        const GAS_URL = ''; // ← GASのデプロイURLをここに貼り付け
         let map, marker, polyline;
         let records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let userName = localStorage.getItem(USER_KEY) || '';
+
+        // --- クラウド送信（移動ログ） ---
+        function sendToCloud(record) {
+            if (!GAS_URL) return;
+            const params = new URLSearchParams({
+                type:      'log',
+                timestamp: record.timestamp,
+                userName:  record.userName,
+                mode:      record.mode,
+                distance:  record.distance.toFixed(3),
+                lat:       record.lat,
+                lng:       record.lng,
+                memo:      record.memo || ''
+            });
+            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: params }).catch(() => {});
+        }
+
+        // --- チェックイン送信 ---
+        function sendCheckin(checkType) {
+            if (!userName) {
+                alert('まず担当者名を設定してください。');
+                return;
+            }
+            const statusEl = document.getElementById('checkinStatus');
+            statusEl.innerText = `📡 ${checkType}チェックイン送信中...`;
+
+            const doSend = (lat, lng) => {
+                if (GAS_URL) {
+                    const params = new URLSearchParams({
+                        type:      'checkin',
+                        timestamp: new Date().toISOString(),
+                        userName:  userName,
+                        checkType: checkType,
+                        lat:       lat,
+                        lng:       lng
+                    });
+                    fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: params }).catch(() => {});
+                }
+                statusEl.innerText = `✅ ${checkType}チェックイン完了！`;
+                setTimeout(() => { statusEl.innerText = ''; }, 3000);
+            };
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => doSend(pos.coords.latitude, pos.coords.longitude),
+                    ()  => doSend(0, 0),
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                );
+            } else {
+                doSend(0, 0);
+            }
+        }
 
         // --- DOM要素 ---
         const mapEl = document.getElementById('map');
@@ -247,6 +325,9 @@
                     records.push(newRecord);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 
+                    // クラウドに送信
+                    sendToCloud(newRecord);
+
                     // 入力欄をクリア
                     memoInput.value = '';
 
@@ -339,7 +420,24 @@
             link.click();
         });
 
-        window.onload = initMap;
+        // --- チェックインボタン ---
+        document.getElementById('checkinMorning').addEventListener('click', () => sendCheckin('朝'));
+        document.getElementById('checkinNoon').addEventListener('click',    () => sendCheckin('昼'));
+        document.getElementById('checkinEvening').addEventListener('click', () => sendCheckin('夜'));
+
+        // クラウド接続状態バッジ更新
+        function updateCloudBadge() {
+            const badge = document.getElementById('cloudBadge');
+            if (GAS_URL) {
+                badge.textContent = '☁️ クラウド連携中';
+                badge.className = 'ml-auto text-xs text-green-600 font-bold';
+            } else {
+                badge.textContent = '☁️ クラウド未設定';
+                badge.className = 'ml-auto text-xs text-gray-400';
+            }
+        }
+
+        window.onload = () => { initMap(); updateCloudBadge(); };
 
         // Service Worker登録 (PWA)
         if ('serviceWorker' in navigator) {
