@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RouteLog｜外回り移動記録アプリ</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon-180.png">
     <link rel="manifest" href="./manifest.json">
     <!-- iPhone PWA対応 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,7 +33,10 @@
         <!-- ヘッダー -->
         <header class="bg-blue-600 text-white p-3 sticky top-0 z-10 flex justify-between items-center">
             <h1 class="text-lg font-bold">📍 RouteLog</h1>
-            <button id="exportBtn" class="text-xs bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded font-bold shadow">CSV出力</button>
+            <div class="flex items-center gap-2">
+              <a href="https://oyajibuki.github.io/tools/routelog/" class="text-xs text-blue-200 hover:text-white">LP</a>
+              <button id="exportBtn" class="text-xs bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded font-bold shadow">CSV出力</button>
+            </div>
         </header>
 
         <!-- 担当者設定エリア -->
