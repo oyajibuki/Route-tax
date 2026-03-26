@@ -130,21 +130,36 @@ function response(msg) {
 // -----------------------------------------------------------
 function doGet(e) {
   try {
-    const date = (e && e.parameter && e.parameter.date)
-      ? e.parameter.date.replace(/-/g, '/')  // 2026-03-26 → 2026/03/26
-      : getTodayStr();
+    const params   = (e && e.parameter) ? e.parameter : {};
+    const date     = params.date ? params.date.replace(/-/g, '/') : getTodayStr();
+    const callback = params.callback || null; // JSONP対応
 
     const ss       = SpreadsheetApp.openById(SS_ID);
-    const logs     = getSheetDataByDate(ss, 'logs',     'records_date', date);
-    const checkins = getSheetDataByDate(ss, 'checkins', 'checkin_date', date);
+    const logs     = getSheetDataByDate(ss, 'logs',     date);
+    const checkins = getSheetDataByDate(ss, 'checkins', date);
 
+    const json = JSON.stringify({ date, logs, checkins });
+
+    // JSONP: callback=xxx がある場合は xxx({...}) 形式で返す
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + json + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
     return ContentService
-      .createTextOutput(JSON.stringify({ date, logs, checkins }))
+      .createTextOutput(json)
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
+    const errJson = JSON.stringify({ error: err.message });
+    const callback = (e && e.parameter && e.parameter.callback) ? e.parameter.callback : null;
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + errJson + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
     return ContentService
-      .createTextOutput(JSON.stringify({ error: err.message }))
+      .createTextOutput(errJson)
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -155,7 +170,7 @@ function getTodayStr() {
 }
 
 // シートから指定日付のデータを取得してオブジェクト配列で返す
-function getSheetDataByDate(ss, sheetName, _unused, date) {
+function getSheetDataByDate(ss, sheetName, date) {
   const sheet = ss.getSheetByName(sheetName);
   if (!sheet) return [];
 
