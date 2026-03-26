@@ -14,7 +14,7 @@
 //  6. デプロイURLをコピー → RouteLogの GAS_URL に貼り付け
 // ============================================================
 
-const SS_ID = 'YOUR_SPREADSHEET_ID'; // ← ここにスプレッドシートのIDを貼り付け
+const SS_ID = '1mQFAmJgaVy8OIwVOntElEH0YWuVtnzrCtXgaZ131X54';
 
 // ヘッダー定義
 const LOG_HEADERS    = ['記録日時', '担当者', '移動手段', '移動距離(km)', '緯度', '経度', 'メモ', '受信日時'];
