@@ -1,7 +1,7 @@
 {
-  "name": "移動距離レコーダー",
-  "short_name": "距離記録",
-  "description": "外回り営業の移動距離をGPSで記録するアプリ",
+  "name": "RouteLog",
+  "short_name": "RouteLog",
+  "description": "外回り営業の移動距離をGPSで記録。経費申請用CSVをワンタップ出力。",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",

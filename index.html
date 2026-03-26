@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>移動距離レコーダー</title>
+    <title>RouteLog｜外回り移動記録アプリ</title>
     <link rel="manifest" href="./manifest.json">
     <!-- iPhone PWA対応 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="距離記録">
+    <meta name="apple-mobile-web-app-title" content="RouteLog">
     <meta name="theme-color" content="#2563eb">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -26,7 +26,7 @@
     <div class="max-w-md mx-auto bg-white min-h-screen shadow-md relative">
         <!-- ヘッダー -->
         <header class="bg-blue-600 text-white p-3 sticky top-0 z-10 flex justify-between items-center">
-            <h1 class="text-lg font-bold">移動距離レコーダー</h1>
+            <h1 class="text-lg font-bold">📍 RouteLog</h1>
             <button id="exportBtn" class="text-xs bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded font-bold shadow">CSV出力</button>
         </header>
 
@@ -345,6 +345,10 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js');
         }
+
+        // アクセスカウンター（ページ表示時に1回だけ送信）
+        fetch("https://script.google.com/macros/s/AKfycbznxYkj5ixnK_pHkGR8LUYhEYdvSYpaiF3x4LaZy964wlu068oak1X1uuIiyqCEtGWF/exec?page=route")
+            .catch(() => {});
     </script>
 </body>
 </html>
