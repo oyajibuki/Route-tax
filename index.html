@@ -120,7 +120,7 @@
         const STORAGE_KEY = 'mileage_records_v2'; // データ構造を変えたためキーを変更
         const USER_KEY    = 'mileage_username';
         // GAS URL（デプロイ後にここを書き換える）
-        const GAS_URL = ''; // ← GASのデプロイURLをここに貼り付け
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyCIOj0829frh8IsGlTQCF_LdqyeD21-myiQA-Hia6IovBfvvBzeogYfWyfNSu4OJGn/exec';
         let map, marker, polyline;
         let records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let userName = localStorage.getItem(USER_KEY) || '';
