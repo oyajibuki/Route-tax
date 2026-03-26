@@ -49,6 +49,10 @@
                     <div class="text-center py-2 border border-gray-300 rounded text-sm text-gray-600 transition-colors">🚗 車</div>
                 </label>
                 <label class="mode-label flex-1">
+                    <input type="radio" name="mode" value="電車" class="hidden">
+                    <div class="text-center py-2 border border-gray-300 rounded text-sm text-gray-600 transition-colors">🚃 電車</div>
+                </label>
+                <label class="mode-label flex-1">
                     <input type="radio" name="mode" value="自転車" class="hidden">
                     <div class="text-center py-2 border border-gray-300 rounded text-sm text-gray-600 transition-colors">🚲 自転車</div>
                 </label>
@@ -171,6 +175,10 @@
 
         // --- ルート距離計算 (OSRM API) ---
         async function getRouteDistance(lat1, lon1, lat2, lon2, mode) {
+            // 電車はOSRM非対応のため直線距離で概算
+            if (mode === '電車') {
+                return calculateStraightDistance(lat1, lon1, lat2, lon2) * 1.2;
+            }
             let profile = 'driving';
             if (mode === '自転車') profile = 'cycling';
             if (mode === '徒歩') profile = 'foot';
@@ -277,7 +285,7 @@
                 totalDist += r.distance;
                 const timeStr = new Date(r.timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
                 const distStr = r.distance > 0 ? `+${r.distance.toFixed(2)} km` : 'スタート地点';
-                const modeIcon = r.mode === '車' ? '🚗' : r.mode === '自転車' ? '🚲' : r.mode === '徒歩' ? '🚶' : '📍';
+                const modeIcon = r.mode === '車' ? '🚗' : r.mode === '電車' ? '🚃' : r.mode === '自転車' ? '🚲' : r.mode === '徒歩' ? '🚶' : '📍';
                 
                 const li = document.createElement('li');
                 li.className = 'bg-white p-3 rounded shadow-sm border border-gray-100 flex flex-col gap-1';
